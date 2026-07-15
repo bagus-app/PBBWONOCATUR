@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1e40af">
+    <title>SIPBB - Desa Wonocatur</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="assets/style.css">
+    
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        primary: { 50:'#eff6ff', 100:'#dbeafe', 200:'#bfdbfe', 500:'#3b82f6', 600:'#2563eb', 700:'#1d4ed8', 800:'#1e40af', 900:'#1e3a5a' },
+                        success: { 50:'#f0fdf4', 100:'#dcfce7', 500:'#22c55e', 600:'#16a34a' },
+                        danger: { 50:'#fef2f2', 100:'#fee2e2', 500:'#ef4444', 600:'#dc2626' },
+                        warning: { 50:'#fffbeb', 100:'#fef3c7', 500:'#f59e0b', 600:'#d97706' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- ==================== HEADER ==================== -->
+    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-14 sm:h-16">
+                <!-- Logo & Info -->
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <div class="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-primary-600 to-primary-800 rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary-200">
+                        <i class="fas fa-landmark text-sm sm:text-base"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-sm sm:text-lg font-bold text-slate-800 leading-tight">SIPBB</h1>
+                        <p class="text-[9px] sm:text-[10px] text-slate-500 font-medium tracking-wide -mt-0.5" id="headerInfo">Memuat...</p>
+                    </div>
+                </div>
+
+                <!-- Desktop Navigation -->
+                <nav class="hidden md:flex gap-1">
+                    <button onclick="switchTab('beranda')" id="nav-beranda" class="nav-btn active">
+                        <i class="fas fa-home mr-1.5"></i>Beranda
+                    </button>
+                    <button onclick="switchTab('cek')" id="nav-cek" class="nav-btn">
+                        <i class="fas fa-search mr-1.5"></i>Cek PBB
+                    </button>
+                    <button onclick="switchTab('statistik')" id="nav-statistik" class="nav-btn">
+                        <i class="fas fa-chart-pie mr-1.5"></i>Statistik
+                    </button>
+                </nav>
+
+                <!-- Refresh Button -->
+                <button onclick="refreshData()" class="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 text-xs sm:text-sm font-medium text-primary-700 bg-primary-50 hover:bg-primary-100 rounded-lg transition" title="Refresh Data">
+                    <i class="fas fa-sync-alt text-xs" id="refreshIcon"></i>
+                    <span class="hidden sm:inline">Refresh</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <main class="flex-grow max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 w-full pb-20 md:pb-6">
+
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="flex flex-col items-center justify-center py-20">
+            <div class="relative w-14 h-14 mb-4">
+                <div class="absolute inset-0 border-4 border-primary-100 rounded-full"></div>
+                <div class="absolute inset-0 border-4 border-primary-500 rounded-full border-t-transparent animate-spin"></div>
+            </div>
+            <p class="text-sm sm:text-base text-slate-500 font-medium">Memuat data...</p>
+        </div>
+
+        <!-- Error Screen -->
+        <div id="error-screen" class="hidden text-center py-16">
+            <div class="w-14 h-14 bg-danger-100 text-danger-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-exclamation-triangle text-xl"></i>
+            </div>
+            <h3 class="text-base sm:text-lg font-bold text-slate-800">Gagal Memuat Data</h3>
+            <p class="text-xs sm:text-sm text-slate-500 mt-2 mb-4">Pastikan koneksi internet stabil</p>
+            <button onclick="refreshData()" class="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700 transition">
+                <i class="fas fa-redo mr-1"></i> Coba Lagi
+            </button>
+        </div>
+
+        <!-- TAB 1: BERANDA (Diisi oleh beranda.js) -->
+        <section id="tab-beranda" class="hidden fade-in"></section>
+
+        <!-- TAB 2: CEK PBB (Diisi oleh cekpbb.js) -->
+        <section id="tab-cek" class="hidden fade-in"></section>
+
+        <!-- TAB 3: STATISTIK (Diisi oleh statistik.js) -->
+        <section id="tab-statistik" class="hidden fade-in"></section>
+
+    </main>
+
+    <!-- ==================== MOBILE BOTTOM NAV ==================== -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg z-50">
+        <div class="flex justify-around items-center h-16">
+            <button onclick="switchTab('beranda')" id="nav-mobile-beranda" class="nav-mobile-btn active flex-1 flex flex-col items-center justify-center gap-0.5 py-2">
+                <i class="fas fa-home text-lg"></i>
+                <span class="text-[10px] font-medium">Beranda</span>
+            </button>
+            <button onclick="switchTab('cek')" id="nav-mobile-cek" class="nav-mobile-btn flex-1 flex flex-col items-center justify-center gap-0.5 py-2">
+                <i class="fas fa-search text-lg"></i>
+                <span class="text-[10px] font-medium">Cek PBB</span>
+            </button>
+            <button onclick="switchTab('statistik')" id="nav-mobile-statistik" class="nav-mobile-btn flex-1 flex flex-col items-center justify-center gap-0.5 py-2">
+                <i class="fas fa-chart-pie text-lg"></i>
+                <span class="text-[10px] font-medium">Statistik</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ==================== SCRIPTS (URUTAN WAJIB) ==================== -->
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/beranda.js"></script>
+    <script src="js/cekpbb.js"></script>
+    <script src="js/statistik.js"></script>
+</body>
+</html>
