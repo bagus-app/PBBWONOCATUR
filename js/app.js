@@ -29,8 +29,9 @@ async function initApp() {
         statsData = stats;
         appData = data;
 
-        // Update header
+        // Update UI dinamis (Header, Footer, Title)
         updateHeader();
+        updateFooter(); // ✅ FUNGSI BARU
 
         // Render semua tab
         renderBeranda();
@@ -64,14 +65,33 @@ function showError() {
     document.getElementById('error-screen').classList.remove('hidden');
 }
 
+// ✅ UPDATE HEADER & TITLE BROWSER
 function updateHeader() {
-    const desa = infoData.desa || 'WONOCATUR';
+    const desa = infoData.desa || 'Desa';
     const tahun = infoData.tahun || '2026';
+    
+    // Update teks di header atas
     document.getElementById('headerInfo').textContent = `Desa ${desa} • ${tahun}`;
+    
+    // Update Title Browser secara dinamis (Bagus untuk SEO & Tab Browser)
+    document.title = `SIPBB - Desa ${desa}`;
+}
+
+// ✅ UPDATE FOOTER DINAMIS
+function updateFooter() {
+    const desa = infoData.desa || '-';
+    const kecamatan = infoData.kecamatan || '-';
+    const kabupaten = infoData.kabupaten || '-';
+    
+    // Update teks di footer (Pastikan di index.html ada id="footer-desa")
+    const footerDesa = document.getElementById('footer-desa');
+    if (footerDesa) {
+        footerDesa.textContent = `Desa ${desa}, Kec. ${kecamatan}, Kab. ${kabupaten}`;
+    }
 }
 
 // ============================================
-// UPDATE STATS (PERUBAHAN ADA DI SINI)
+// UPDATE STATS
 // ============================================
 function updateStats() {
     const s = statsData;
@@ -140,7 +160,6 @@ async function refreshData() {
 // ============================================
 // UTILITY FUNCTIONS
 // ============================================
-
 function num(v) {
     if (v === null || v === undefined || v === '') return 0;
     const str = String(v).trim();

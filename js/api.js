@@ -4,9 +4,9 @@
  */
 
 // ============================================
-// KONFIGURASI
+// KONFIGURASI (Mengambil URL dari config.js)
 // ============================================
-const API_URL = "https://script.google.com/macros/s/AKfycbxkU0B_xCyoyI5pR9jXebclNxc4BaCQAh8OsWS8N5VTKSpp46x-EEFsiLQxDBixAE30wg/exec";
+const API_URL = APP_CONFIG.API_URL;
 
 // ============================================
 // API FUNCTIONS
