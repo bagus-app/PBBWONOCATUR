@@ -3,263 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Upload - SIPBB Wonocatur</title>
+    <title>Admin SIPBB Wonocatur</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SheetJS untuk membaca Excel -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- GANTI URL INI DENGAN URL DEPLOYMENT APPS SCRIPT ANDA -->
     <script>
-        const APP_CONFIG = {
-            API_URL: "https://script.google.com/macros/s/AKfycbxkU0B_xCyoyI5pR9jXebclNxc4BaCQAh8OsWS8N5VTKSpp46x-EEFsiLQxDBixAE30wg/exec"
-        };
+        // GANTI DENGAN URL APPS SCRIPT ANDA
+        const API_URL = "https://script.google.com/macros/s/AKfycbxkU0B_xCyoyI5pR9jXebclNxc4BaCQAh8OsWS8N5VTKSpp46x-EEFsiLQxDBixAE30wg/exec";
     </script>
 </head>
-<body class="bg-slate-50 min-h-screen font-sans">
+<body class="bg-slate-100 min-h-screen font-sans">
 
-    <!-- Header -->
-    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-10">
-        <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
-            <div>
-                <h1 class="text-xl font-bold text-slate-800"><i class="fas fa-shield-alt text-blue-600 mr-2"></i>Admin Dashboard</h1>
-                <p class="text-xs text-slate-500">Sinkronisasi Data e-SPPT ke Google Sheets</p>
+    <!-- LAYAR LOGIN / SETUP PIN -->
+    <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 text-center">
+            <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-shield-alt text-2xl"></i>
             </div>
-            <a href="../index.html" class="text-sm text-slate-600 hover:text-blue-600 font-medium">
-                <i class="fas fa-arrow-left mr-1"></i> Kembali ke Website
-            </a>
-        </div>
-    </header>
-
-    <!-- Main Content -->
-    <main class="max-w-5xl mx-auto px-4 py-8">
-        
-        <!-- Info Box -->
-        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg mb-8">
-            <div class="flex">
-                <div class="flex-shrink-0"><i class="fas fa-info-circle text-blue-500 mt-1"></i></div>
-                <div class="ml-3">
-                    <h3 class="text-sm font-bold text-blue-800">Panduan Upload:</h3>
-                    <ul class="text-sm text-blue-700 mt-1 list-disc list-inside space-y-1">
-                        <li>Download file dari e-SPPT (format .xls atau .xlsx).</li>
-                        <li><strong>JANGAN</strong> dibuka/diedit di Excel dulu (untuk hindari warning corrupt).</li>
-                        <li>Langsung upload file di bawah ini. Sistem akan otomatis merapikan data (menghapus kop surat, baris TOTAL, dan format tanggal).</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <!-- Upload Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <h2 id="auth-title" class="text-2xl font-bold text-slate-800 mb-2">Memuat...</h2>
+            <p id="auth-desc" class="text-sm text-slate-500 mb-6">Sedang memeriksa konfigurasi sistem.</p>
             
-            <!-- 1. REALISASI -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col">
-                <div class="flex items-center mb-4">
-                    <div class="w-10 h-10 bg-green-100 text-green-600 rounded-lg flex items-center justify-center mr-3">
-                        <i class="fas fa-check-circle text-lg"></i>
-                    </div>
-                    <h3 class="font-bold text-slate-800">Data Realisasi</h3>
-                </div>
-                <p class="text-xs text-slate-500 mb-4 flex-grow">File: <code class="bg-slate-100 px-1 rounded text-slate-700">CETAK_REALISASI_REKAP</code></p>
-                <input type="file" id="fileRealisasi" accept=".xls,.xlsx,.csv" class="hidden" onchange="handleUpload(this, 'realisasi')">
-                <button onclick="document.getElementById('fileRealisasi').click()" class="w-full bg-slate-100 text-slate-700 py-2.5 rounded-lg hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 border border-transparent transition text-sm font-medium">
-                    <i class="fas fa-cloud-upload-alt mr-2"></i>Pilih & Upload
-                </button>
-                <div id="statusRealisasi" class="mt-3 text-xs min-h-[40px]"></div>
-            </div>
-
-            <!-- 2. TUNGGAKAN -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col">
-                <div class="flex items-center mb-4">
-                    <div class="w-10 h-10 bg-red-100 text-red-600 rounded-lg flex items-center justify-center mr-3">
-                        <i class="fas fa-exclamation-triangle text-lg"></i>
-                    </div>
-                    <h3 class="font-bold text-slate-800">Data Tunggakan</h3>
-                </div>
-                <p class="text-xs text-slate-500 mb-4 flex-grow">File: <code class="bg-slate-100 px-1 rounded text-slate-700">CETAKTUNGGAKAN</code></p>
-                <input type="file" id="fileTunggakan" accept=".xls,.xlsx,.csv" class="hidden" onchange="handleUpload(this, 'tunggakan')">
-                <button onclick="document.getElementById('fileTunggakan').click()" class="w-full bg-slate-100 text-slate-700 py-2.5 rounded-lg hover:bg-red-50 hover:text-red-600 hover:border-red-200 border border-transparent transition text-sm font-medium">
-                    <i class="fas fa-cloud-upload-alt mr-2"></i>Pilih & Upload
-                </button>
-                <div id="statusTunggakan" class="mt-3 text-xs min-h-[40px]"></div>
-            </div>
-
-            <!-- 3. KETETAPAN -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col">
-                <div class="flex items-center mb-4">
-                    <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mr-3">
-                        <i class="fas fa-file-invoice text-lg"></i>
-                    </div>
-                    <h3 class="font-bold text-slate-800">Data Ketetapan</h3>
-                </div>
-                <p class="text-xs text-slate-500 mb-4 flex-grow">File: <code class="bg-slate-100 px-1 rounded text-slate-700">CETAKKETETAPAN</code></p>
-                <input type="file" id="fileKetetapan" accept=".xls,.xlsx,.csv" class="hidden" onchange="handleUpload(this, 'ketetapan')">
-                <button onclick="document.getElementById('fileKetetapan').click()" class="w-full bg-slate-100 text-slate-700 py-2.5 rounded-lg hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 border border-transparent transition text-sm font-medium">
-                    <i class="fas fa-cloud-upload-alt mr-2"></i>Pilih & Upload
-                </button>
-                <div id="statusKetetapan" class="mt-3 text-xs min-h-[40px]"></div>
-            </div>
-
+            <input type="password" id="pin-input" placeholder="Masukkan PIN (min. 4 digit)" 
+                class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 text-center tracking-widest hidden">
+            
+            <button id="auth-btn" onclick="handleAuth()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition hidden">
+                Masuk
+            </button>
+            <p id="auth-msg" class="text-sm mt-3 hidden"></p>
         </div>
-    </main>
+    </div>
+
+    <!-- LAYAR DASHBOARD ADMIN -->
+    <div id="dashboard-screen" class="hidden">
+        <header class="bg-white shadow-sm border-b border-slate-200">
+            <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
+                <div>
+                    <h1 class="text-xl font-bold text-slate-800"><i class="fas fa-database text-blue-600 mr-2"></i>Upload Data e-SPPT</h1>
+                    <p class="text-xs text-slate-500">Desa Wonocatur • Sinkronisasi Otomatis</p>
+                </div>
+                <button onclick="logout()" class="text-sm text-red-600 hover:text-red-800 font-medium"><i class="fas fa-sign-out-alt mr-1"></i> Keluar</button>
+            </div>
+        </header>
+
+        <main class="max-w-5xl mx-auto px-4 py-8">
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg mb-8">
+                <p class="text-sm text-blue-700"><i class="fas fa-info-circle mr-2"></i>Upload file Excel mentah dari e-SPPT. Sistem akan otomatis merapikan data (menghapus kop surat, baris TOTAL, dan format tanggal).</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Card Realisasi -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 bg-green-100 text-green-600 rounded-lg flex items-center justify-center mr-3"><i class="fas fa-check-circle text-lg"></i></div>
+                        <h3 class="font-bold text-slate-800">Data Realisasi</h3>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-4 flex-grow">File: <code class="bg-slate-100 px-1 rounded">CETAK_REALISASI_REKAP</code></p>
+                    <input type="file" id="file-real" accept=".xls,.xlsx" class="hidden" onchange="handleUpload(this, 'realisasi')">
+                    <button onclick="document.getElementById('file-real').click()" class="w-full bg-slate-100 text-slate-700 py-2.5 rounded-lg hover:bg-green-50 hover:text-green-600 transition text-sm font-medium"><i class="fas fa-upload mr-2"></i>Pilih File</button>
+                    <div id="status-real" class="mt-3 text-xs min-h-[40px]"></div>
+                </div>
+
+                <!-- Card Tunggakan -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 bg-red-100 text-red-600 rounded-lg flex items-center justify-center mr-3"><i class="fas fa-exclamation-triangle text-lg"></i></div>
+                        <h3 class="font-bold text-slate-800">Data Tunggakan</h3>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-4 flex-grow">File: <code class="bg-slate-100 px-1 rounded">CETAKTUNGGAKAN</code></p>
+                    <input type="file" id="file-tung" accept=".xls,.xlsx" class="hidden" onchange="handleUpload(this, 'tunggakan')">
+                    <button onclick="document.getElementById('file-tung').click()" class="w-full bg-slate-100 text-slate-700 py-2.5 rounded-lg hover:bg-red-50 hover:text-red-600 transition text-sm font-medium"><i class="fas fa-upload mr-2"></i>Pilih File</button>
+                    <div id="status-tung" class="mt-3 text-xs min-h-[40px]"></div>
+                </div>
+
+                <!-- Card Ketetapan -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mr-3"><i class="fas fa-file-invoice text-lg"></i></div>
+                        <h3 class="font-bold text-slate-800">Data Ketetapan</h3>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-4 flex-grow">File: <code class="bg-slate-100 px-1 rounded">CETAKKETETAPAN</code></p>
+                    <input type="file" id="file-ket" accept=".xls,.xlsx" class="hidden" onchange="handleUpload(this, 'ketetapan')">
+                    <button onclick="document.getElementById('file-ket').click()" class="w-full bg-slate-100 text-slate-700 py-2.5 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition text-sm font-medium"><i class="fas fa-upload mr-2"></i>Pilih File</button>
+                    <div id="status-ket" class="mt-3 text-xs min-h-[40px]"></div>
+                </div>
+            </div>
+        </main>
+    </div>
 
     <script>
-        // ==========================================
-        // 1. SMART PARSER LOGIC (DISESUAIKAN DENGAN FILE ANDA)
-        // ==========================================
-        function parseExcelData(file, type) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const data = new Uint8Array(e.target.result);
-                        // cellDates: true agar tanggal Excel terbaca sebagai objek Date
-                        const workbook = XLSX.read(data, { type: 'array', cellDates: true, cellNF: true });
-                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                        
-                        // Baca sebagai array of arrays (mentah)
-                        const rawData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+        let isSetupMode = false;
 
-                        // A. Cari Baris Header (yang mengandung kata 'NOP')
-                        let headerRowIndex = -1;
-                        let rawHeaders = [];
-                        
-                        for (let i = 0; i < rawData.length; i++) {
-                            const rowStr = rawData[i].join(' ').toUpperCase();
-                            if (rowStr.includes('NOP') && !rowStr.includes('TOTAL')) {
-                                headerRowIndex = i;
-                                rawHeaders = rawData[i].map(h => String(h).trim().toUpperCase());
-                                break;
-                            }
-                        }
+        // 1. CEK STATUS SAAT HALAMAN DIBUKA
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetch(`${API_URL}?action=checkpin`);
+                const data = await res.json();
+                
+                const title = document.getElementById('auth-title');
+                const desc = document.getElementById('auth-desc');
+                const input = document.getElementById('pin-input');
+                const btn = document.getElementById('auth-btn');
 
-                        if (headerRowIndex === -1) {
-                            reject(new Error('Format file tidak dikenali. Kolom "NOP" tidak ditemukan.'));
-                            return;
-                        }
+                if (!data.exists) {
+                    isSetupMode = true;
+                    title.innerText = "Setup PIN Pertama Kali";
+                    desc.innerText = "Sistem belum memiliki PIN. Buat PIN rahasia Anda sekarang.";
+                } else {
+                    isSetupMode = false;
+                    title.innerText = "Login Admin";
+                    desc.innerText = "Masukkan PIN untuk mengakses dashboard upload.";
+                }
+                input.classList.remove('hidden');
+                btn.classList.remove('hidden');
+                btn.innerText = isSetupMode ? "Simpan PIN" : "Masuk";
+            } catch (e) {
+                document.getElementById('auth-title').innerText = "Error Koneksi";
+                document.getElementById('auth-desc').innerText = "Gagal terhubung ke Google Apps Script.";
+            }
+        });
 
-                        // B. Mapping Kolom (Membersihkan header ganda & menyamakan nama dengan Google Sheet)
-                        const columnMapping = {
-                            'NOP': 'NOP',
-                            'NAMA SPPT': 'NAMA',
-                            'NAMA WAJIB PAJAK': 'NAMA',
-                            'ALAMAT OBJEK PAJAK': 'ALAMAT',
-                            'ALAMAT WAJIB PAJAK': 'ALAMAT',
-                            'KETETAPAN': 'NOMINAL',
-                            'PAJAK YG HARUS DIBAYAR': 'NOMINAL',
-                            'PEMBAYARAN': 'NOMINAL',
-                            'POKOK PAJAK': 'POKOK',
-                            'DENDA': 'DENDA',
-                            'PAJAK TERHUTANG': 'NOMINAL',
-                            'TGL PEMBAYARAN': 'TANGGAL',
-                            'PETUGAS PUNGUT': 'PETUGAS',
-                            'PENYAMPAI': 'PETUGAS'
-                        };
+        // 2. HANDLE LOGIN / SETUP
+        async function handleAuth() {
+            const pin = document.getElementById('pin-input').value;
+            const msg = document.getElementById('auth-msg');
+            if (pin.length < 4) { msg.innerText = "PIN minimal 4 digit!"; msg.className = "text-sm mt-3 text-red-500 block"; return; }
 
-                        const cleanHeaders = [];
-                        const headerMap = {}; // Index asli -> Nama baru
-                        
-                        rawHeaders.forEach((h, index) => {
-                            if (columnMapping[h] && !cleanHeaders.includes(columnMapping[h])) {
-                                cleanHeaders.push(columnMapping[h]);
-                                headerMap[index] = columnMapping[h];
-                            }
-                        });
+            msg.innerText = "Memproses..."; msg.className = "text-sm mt-3 text-blue-500 block";
+            const hash = await sha256(pin);
 
-                        // C. Ekstrak Data
-                        const result = [];
-                        for (let i = headerRowIndex + 1; i < rawData.length; i++) {
-                            const row = rawData[i];
-                            const rowStr = row.join(' ').toUpperCase();
-                            
-                            // Berhenti jika ketemu baris TOTAL
-                            if (rowStr.includes('TOTAL') || rowStr.includes('TOTAL KETETAPAN')) break;
-                            
-                            // Skip baris kosong total
-                            if (row.every(cell => String(cell).trim() === '')) continue;
+            try {
+                const action = isSetupMode ? 'savepin' : 'verifypin';
+                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action, hash }) });
+                const data = await res.json();
 
-                            const rowData = {};
-                            let hasNop = false;
-
-                            row.forEach((cell, index) => {
-                                if (headerMap[index]) {
-                                    let val = cell;
-                                    
-                                    // Format Tanggal Khusus (Menangani "20-Jul-26", "3-Mar-26", dll)
-                                    if (headerMap[index] === 'TANGGAL' && val instanceof Date) {
-                                        const d = val;
-                                        const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-                                        val = `${String(d.getDate()).padStart(2,'0')}-${months[d.getMonth()]}-${String(d.getFullYear()).slice(-2)}`;
-                                    }
-                                    
-                                    rowData[headerMap[index]] = val;
-                                    if (headerMap[index] === 'NOP' && String(val).trim() !== '') hasNop = true;
-                                }
-                            });
-
-                            // Hanya simpan jika NOP valid
-                            if (hasNop) {
-                                result.push(rowData);
-                            }
-                        }
-                        
-                        resolve(result);
-                    } catch (err) {
-                        console.error(err);
-                        reject(new Error('Gagal membaca file Excel. Pastikan file tidak rusak.'));
-                    }
-                };
-                reader.readAsArrayBuffer(file);
-            });
+                if (data.success) {
+                    if (isSetupMode) { alert("PIN berhasil dibuat! Silakan login."); location.reload(); } 
+                    else { document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('dashboard-screen').classList.remove('hidden'); }
+                } else {
+                    msg.innerText = "PIN Salah!"; msg.className = "text-sm mt-3 text-red-500 block";
+                }
+            } catch (e) { msg.innerText = "Gagal terhubung ke server."; msg.className = "text-sm mt-3 text-red-500 block"; }
         }
 
-        // ==========================================
-        // 2. UPLOAD HANDLER
-        // ==========================================
+        function logout() { location.reload(); }
+
+        // 3. SMART PARSER & UPLOAD
         async function handleUpload(input, type) {
             const file = input.files[0];
             if (!file) return;
-
-            const statusEl = document.getElementById(`status${type.charAt(0).toUpperCase() + type.slice(1)}`);
-            statusEl.innerHTML = `<div class="text-blue-600 flex items-center"><i class="fas fa-circle-notch fa-spin mr-2"></i> Membaca & merapikan data...</div>`;
-            
-            // Disable button temporarily
-            input.disabled = true;
+            const statusEl = document.getElementById(`status-${type.substring(0,3)}`);
+            statusEl.innerHTML = `<div class="text-blue-600"><i class="fas fa-spinner fa-spin mr-1"></i> Membaca & merapikan data...</div>`;
 
             try {
-                // 1. Parse File
-                const cleanData = await parseExcelData(file, type);
-                
-                if (cleanData.length === 0) {
-                    throw new Error('Tidak ada data valid yang ditemukan di file.');
+                const data = new Uint8Array(await file.arrayBuffer());
+                const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1, defval: '' });
+
+                // A. Cari Baris Header (yang mengandung 'NOP')
+                let headerIdx = -1;
+                for (let i = 0; i < rawData.length; i++) {
+                    if (rawData[i].some(cell => String(cell).toUpperCase().includes('NOP'))) { headerIdx = i; break; }
+                }
+                if (headerIdx === -1) throw new Error("Format Excel tidak dikenali (Header NOP tidak ditemukan).");
+
+                // B. Mapping Kolom (Mengatasi Merge Cells & Perbedaan Nama)
+                const headers = rawData[headerIdx].map(h => String(h).trim().toUpperCase());
+                const seen = new Set();
+                const cleanHeaders = headers.map(h => { if (seen.has(h) || h === '') return ''; seen.add(h); return h; });
+
+                const result = [];
+                for (let i = headerIdx + 1; i < rawData.length; i++) {
+                    const row = rawData[i];
+                    // Berhenti jika ketemu baris TOTAL
+                    if (String(row[0]).toUpperCase().includes('TOTAL')) break;
+                    if (row.every(cell => String(cell).trim() === '')) continue;
+
+                    const rowData = {};
+                    cleanHeaders.forEach((h, idx) => {
+                        if (h) {
+                            let val = row[idx];
+                            // Format Tanggal jika object Date
+                            if (val instanceof Date) val = `${String(val.getDate()).padStart(2,'0')}/${String(val.getMonth()+1).padStart(2,'0')}/${val.getFullYear()}`;
+                            rowData[h] = val;
+                        }
+                    });
+
+                    // Normalisasi Nama Key agar cocok dengan Backend
+                    const mapped = {
+                        NOP: rowData['NOP'],
+                        NAMA: rowData['NAMA SPPT'] || rowData['NAMA WAJIB PAJAK'],
+                        ALAMAT: rowData['ALAMAT OBJEK PAJAK'],
+                        NOMINAL: rowData['PEMBAYARAN'] || rowData['PAJAK YG HARUS DIBAYAR'] || rowData['PAJAK TERHUTANG'] || rowData['KETETAPAN'],
+                        TANGGAL: rowData['TGL PEMBAYARAN'],
+                        PETUGAS: rowData['PETUGAS PUNGUT'] || rowData['PENYAMPAI'],
+                        POKOK: rowData['POKOK PAJAK'],
+                        DENDA: rowData['DENDA']
+                    };
+
+                    if (mapped.NOP && String(mapped.NOP).trim() !== '') result.push(mapped);
                 }
 
-                statusEl.innerHTML = `<div class="text-orange-600 flex items-center"><i class="fas fa-circle-notch fa-spin mr-2"></i> Mengirim ${cleanData.length} data ke Server...</div>`;
+                if (result.length === 0) throw new Error("Tidak ada data valid yang ditemukan.");
 
-                // 2. Kirim ke Apps Script
-                const response = await fetch(APP_CONFIG.API_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ 
-                        action: `upload${type.charAt(0).toUpperCase() + type.slice(1)}`, 
-                        rows: cleanData 
-                    })
-                });
-                
-                const result = await response.json();
+                // C. Kirim ke Backend
+                statusEl.innerHTML = `<div class="text-orange-600"><i class="fas fa-cloud-upload-alt mr-1"></i> Mengirim ${result.length} data...</div>`;
+                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: `upload${type}`, rows: result }) });
+                const resData = await res.json();
 
-                if (result.success) {
-                    statusEl.innerHTML = `<div class="text-green-600 font-medium flex items-center"><i class="fas fa-check-circle mr-2"></i> ${result.message}</div>`;
-                } else {
-                    throw new Error(result.message);
-                }
+                if (resData.success) statusEl.innerHTML = `<div class="text-green-600 font-medium"><i class="fas fa-check-circle mr-1"></i> ${resData.message}</div>`;
+                else throw new Error(resData.message);
 
             } catch (error) {
-                console.error(error);
-                statusEl.innerHTML = `<div class="text-red-600 font-medium flex items-center"><i class="fas fa-times-circle mr-2"></i> Gagal: ${error.message}</div>`;
-            } finally {
-                input.disabled = false;
-                input.value = ''; // Reset input file
+                statusEl.innerHTML = `<div class="text-red-600"><i class="fas fa-times-circle mr-1"></i> Gagal: ${error.message}</div>`;
             }
+            input.value = '';
+        }
+
+        // Helper SHA-256
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
         }
     </script>
 </body>
