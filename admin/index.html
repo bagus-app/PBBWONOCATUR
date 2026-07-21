@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - SIPBB</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- GANTI URL INI DENGAN URL APPS SCRIPT ANDA -->
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbxkU0B_xCyoyI5pR9jXebclNxc4BaCQAh8OsWS8N5VTKSpp46x-EEFsiLQxDBixAE30wg/exec";
+    </script>
+</head>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
+
+    <!-- CONTAINER UTAMA -->
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+        
+        <!-- HALAMAN LOGIN -->
+        <div id="loginPage">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-lock text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800">Admin SIPBB</h2>
+                <p class="text-sm text-slate-500">Masukkan PIN untuk masuk</p>
+            </div>
+            
+            <input type="password" id="loginInput" placeholder="Masukkan PIN..." 
+                class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 text-center tracking-widest">
+            
+            <button onclick="handleLogin()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition">
+                Masuk
+            </button>
+            <p id="loginError" class="text-red-500 text-sm text-center mt-3 hidden">PIN Salah!</p>
+        </div>
+
+        <!-- HALAMAN DASHBOARD (Setelah Login) -->
+        <div id="dashboardPage" class="hidden">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-check-circle text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800">Selamat Datang!</h2>
+                <p class="text-sm text-slate-500">Anda berhasil masuk ke panel admin.</p>
+            </div>
+
+            <div class="space-y-3">
+                <button class="w-full bg-slate-100 text-slate-700 py-3 rounded-lg font-medium hover:bg-slate-200 transition">
+                    <i class="fas fa-file-excel mr-2"></i> Upload Data Excel (Segera Hadir)
+                </button>
+                
+                <hr class="my-4 border-slate-200">
+                
+                <h3 class="font-bold text-slate-700 text-sm">Keamanan</h3>
+                <button onclick="showChangePassword()" class="w-full bg-yellow-500 text-white py-3 rounded-lg font-medium hover:bg-yellow-600 transition">
+                    <i class="fas fa-key mr-2"></i> Ganti PIN / Password
+                </button>
+                
+                <button onclick="handleLogout()" class="w-full bg-red-500 text-white py-3 rounded-lg font-medium hover:bg-red-600 transition">
+                    <i class="fas fa-sign-out-alt mr-2"></i> Keluar
+                </button>
+            </div>
+        </div>
+
+        <!-- MODAL GANTI PASSWORD -->
+        <div id="changePasswordModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-xl p-6 w-full max-w-sm">
+                <h3 class="text-lg font-bold text-slate-800 mb-4">Ganti PIN Baru</h3>
+                <input type="password" id="newPasswordInput" placeholder="Ketik PIN Baru..." 
+                    class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4">
+                
+                <div class="flex gap-2">
+                    <button onclick="closeChangePassword()" class="flex-1 bg-slate-200 text-slate-700 py-2 rounded-lg hover:bg-slate-300">Batal</button>
+                    <button onclick="handleSavePassword()" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">Simpan</button>
+                </div>
+                <p id="changePasswordStatus" class="text-sm text-center mt-3 hidden"></p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. FUNGSI HASHING (SHA-256)
+        // ==========================================
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // ==========================================
+        // 2. LOGIKA LOGIN
+        // ==========================================
+        async function handleLogin() {
+            const input = document.getElementById('loginInput').value;
+            if (!input) return;
+
+            const hash = await hashPassword(input);
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'verifyPassword', hash: hash })
+                });
+                const result = await response.json();
+
+                if (result.success === true || result.success === "FIRST_LOGIN") {
+                    // Jika FIRST_LOGIN, simpan hash ini sebagai password pertama
+                    if (result.success === "FIRST_LOGIN") {
+                        await savePasswordToSheet(hash); 
+                    }
+                    document.getElementById('loginPage').classList.add('hidden');
+                    document.getElementById('dashboardPage').classList.remove('hidden');
+                } else {
+                    document.getElementById('loginError').classList.remove('hidden');
+                }
+            } catch (error) {
+                alert("Gagal terhubung ke server.");
+            }
+        }
+
+        // ==========================================
+        // 3. LOGIKA GANTI PASSWORD
+        // ==========================================
+        function showChangePassword() {
+            document.getElementById('changePasswordModal').classList.remove('hidden');
+            document.getElementById('newPasswordInput').value = '';
+            document.getElementById('changePasswordStatus').classList.add('hidden');
+        }
+
+        function closeChangePassword() {
+            document.getElementById('changePasswordModal').classList.add('hidden');
+        }
+
+        async function handleSavePassword() {
+            const newPass = document.getElementById('newPasswordInput').value;
+            if (newPass.length < 4) {
+                alert("PIN minimal 4 karakter!");
+                return;
+            }
+
+            const newHash = await hashPassword(newPass);
+            await savePasswordToSheet(newHash);
+        }
+
+        async function savePasswordToSheet(hash) {
+            const statusEl = document.getElementById('changePasswordStatus');
+            statusEl.classList.remove('hidden');
+            statusEl.textContent = "Menyimpan...";
+            statusEl.className = "text-sm text-center mt-3 text-blue-500";
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'changePassword', newHash: hash })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    statusEl.textContent = "Berhasil! PIN telah diubah.";
+                    statusEl.className = "text-sm text-center mt-3 text-green-500";
+                    setTimeout(closeChangePassword, 1500);
+                } else {
+                    statusEl.textContent = "Gagal menyimpan.";
+                    statusEl.className = "text-sm text-center mt-3 text-red-500";
+                }
+            } catch (error) {
+                statusEl.textContent = "Error koneksi.";
+                statusEl.className = "text-sm text-center mt-3 text-red-500";
+            }
+        }
+
+        // ==========================================
+        // 4. LOGIKA LOGOUT
+        // ==========================================
+        function handleLogout() {
+            document.getElementById('dashboardPage').classList.add('hidden');
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('loginInput').value = '';
+            document.getElementById('loginError').classList.add('hidden');
+        }
+
+        // Support tombol Enter saat login
+        document.getElementById('loginInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') handleLogin();
+        });
+    </script>
+</body>
+</html>
